@@ -14,15 +14,16 @@ async function fetchData() {
         const dates = rows.map(row => row[0].replace(/"/g, ''));
         const depositRates = rows.map(row => parseFloat(row[1]));
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
+        const merchantCharges = rows.map(row => parseFloat(row[3].replace(/["\$,]/g, '')));
         
-        renderChart(dates, depositRates, withdrawalRates);
+        renderSuccessRateChart(dates, depositRates, withdrawalRates);
+        renderMerchantChargeChart(dates, merchantCharges);
     } catch (error) {
         console.error('Error fetching data:', error);
-        document.getElementById('successRateChart').innerHTML = '数据加载失败，请刷新重试';
     }
 }
 
-function renderChart(dates, depositRates, withdrawalRates) {
+function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     const chart = echarts.init(document.getElementById('successRateChart'));
     
     const option = {
@@ -87,11 +88,26 @@ function renderChart(dates, depositRates, withdrawalRates) {
 
     chart.setOption(option);
 
-    // 响应式调整
     window.addEventListener('resize', function() {
         chart.resize();
     });
 }
 
-// 页面加载完成后获取数据
-document.addEventListener('DOMContentLoaded', fetchData);
+function renderMerchantChargeChart(dates, merchantCharges) {
+    const chart = echarts.init(document.getElementById('merchantChargeChart'));
+    
+    const option = {
+        title: {
+            text: '每日商户收费',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '商户收费: $' + params[0].value;
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4

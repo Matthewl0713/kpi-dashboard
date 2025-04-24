@@ -132,19 +132,15 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         series: [
             {
                 name: '商户收费',
-                type: 'bar',  // 改为柱形图
+                type: 'bar',
                 data: merchantCharges,
                 itemStyle: {
                     color: '#91CC75',
-                    borderRadius: [4, 4, 0, 0]  // 添加圆角
+                    borderRadius: [4, 4, 0, 0]
                 },
-                barWidth: '60%',  // 控制柱子宽度
+                barWidth: '60%',
                 label: {
-                    show: true,
-                    position: 'top',
-                    formatter: '${c}',
-                    fontSize: 12,
-                    color: '#666'
+                    show: false  // 将标签显示设置为 false
                 }
             }
         ]

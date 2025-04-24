@@ -264,8 +264,8 @@ function renderWithdrawalTimeChart(dates, withdrawalTimes) {
         },
         yAxis: {
             type: 'value',
-            min: 20,
-            max: 50,
+            min: 50,
+            max: 110,
             interval: 5,
             axisLabel: {
                 formatter: '{value} 秒'

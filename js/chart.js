@@ -61,7 +61,7 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
         },
         yAxis: {
             type: 'value',
-            min: 75,
+            min: 80,
             max: 95,
             axisLabel: {
                 formatter: '{value}%'
@@ -95,6 +95,13 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
 function renderMerchantChargeChart(dates, merchantCharges) {
     const chart = echarts.init(document.getElementById('merchantChargeChart'));
     
+    // 计算合适的 Y 轴范围
+    const minValue = Math.min(...merchantCharges);
+    const maxValue = Math.max(...merchantCharges);
+    const valueRange = maxValue - minValue;
+    const yMin = Math.floor(minValue - valueRange * 0.1);
+    const yMax = Math.ceil(maxValue + valueRange * 0.1);
+
     const option = {
         title: {
             text: '每日商户收费',
@@ -122,6 +129,9 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         yAxis: {
             type: 'value',
+            min: 1230,
+            max: 1270,
+            splitNumber: 8,
             axisLabel: {
                 formatter: '${value}'
             }
@@ -134,10 +144,31 @@ function renderMerchantChargeChart(dates, merchantCharges) {
                 itemStyle: {
                     color: '#91CC75'
                 },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0,
+                            color: '#91CC75'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(145, 204, 117, 0.1)'
+                        }]
+                    }
+                },
+                smooth: true,
+                showSymbol: true,
+                symbolSize: 6,
                 label: {
                     show: true,
                     position: 'top',
-                    formatter: '${c}'
+                    formatter: '${c}',
+                    fontSize: 12,
+                    color: '#666'
                 }
             }
         ]

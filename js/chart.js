@@ -169,7 +169,7 @@ function renderDepositTimeChart(dates, depositTimes) {
             trigger: 'axis',
             formatter: function(params) {
                 return params[0].axisValue + '<br/>' +
-                       '平均时间: ' + params[0].value + ' 秒';  // 改为秒
+                       '平均时间: ' + params[0].value + ' 分钟';
             }
         },
         grid: {
@@ -187,11 +187,11 @@ function renderDepositTimeChart(dates, depositTimes) {
         },
         yAxis: {
             type: 'value',
-            min: 20,  // 根据数据调整最小值
-            max: 50,  // 根据数据调整最大值
-            interval: 5,
+            min: 0,
+            max: 50,
+            interval: 10,
             axisLabel: {
-                formatter: '{value} 秒'  // 改为秒
+                formatter: '{value} 分钟'
             }
         },
         series: [
@@ -207,10 +207,7 @@ function renderDepositTimeChart(dates, depositTimes) {
                     data: [
                         {
                             type: 'average',
-                            name: '平均值',
-                            label: {
-                                formatter: '平均值: {c} 秒'  // 改为秒
-                            }
+                            name: '平均值'
                         }
                     ]
                 }

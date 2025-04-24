@@ -169,7 +169,7 @@ function renderDepositTimeChart(dates, depositTimes) {
             trigger: 'axis',
             formatter: function(params) {
                 return params[0].axisValue + '<br/>' +
-                       '平均时间: ' + params[0].value + ' 分钟';
+                       '平均时间: ' + params[0].value + ' 秒';
             }
         },
         grid: {
@@ -189,9 +189,9 @@ function renderDepositTimeChart(dates, depositTimes) {
             type: 'value',
             min: 0,
             max: 50,
-            interval: 10,
+            interval: 5,
             axisLabel: {
-                formatter: '{value} 分钟'
+                formatter: '{value} 秒'
             }
         },
         series: [
@@ -207,7 +207,10 @@ function renderDepositTimeChart(dates, depositTimes) {
                     data: [
                         {
                             type: 'average',
-                            name: '平均值'
+                            name: '平均值',
+                            label: {
+                                formatter: '平均值: {c} 秒'
+                            }
                         }
                     ]
                 }

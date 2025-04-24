@@ -24,10 +24,12 @@ async function fetchData() {
 
         // 解析第二个 Sheet 的数据
         const depositTimes = rows2.map(row => parseFloat(row[1]));
+        const withdrawalTimes = rows2.map(row => parseFloat(row[2]));
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
         renderDepositTimeChart(dates, depositTimes);
+        renderWithdrawalTimeChart(dates, withdrawalTimes);
     } catch (error) {
         console.error('数据获取或处理错误:', error);
     }
@@ -189,7 +191,7 @@ function renderDepositTimeChart(dates, depositTimes) {
             type: 'value',
             min: 0,
             max: 50,
-            interval: 10,
+            interval: 5,
             axisLabel: {
                 formatter: '{value} 秒'
             },
@@ -213,9 +215,85 @@ function renderDepositTimeChart(dates, depositTimes) {
                     silent: true,
                     data: [
                         {
-                            yAxis: 34.81,
+                            type: 'average',
+                            name: '平均值',
                             label: {
-                                formatter: '平均值: 34.81秒',
+                                formatter: '平均值: {c} 秒',
+                                position: 'end'
+                            },
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+
+    chart.setOption(option);
+}
+
+function renderWithdrawalTimeChart(dates, withdrawalTimes) {
+    const chart = echarts.init(document.getElementById('withdrawalTimeChart'));
+    
+    const option = {
+        title: {
+            text: '每日平均手动取款时间',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '平均时间: ' + params[0].value + ' 秒';
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '15%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: 20,
+            max: 50,
+            interval: 5,
+            axisLabel: {
+                formatter: '{value} 秒'
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    type: 'dashed'
+                }
+            }
+        },
+        series: [
+            {
+                name: '取款时间',
+                type: 'line',
+                data: withdrawalTimes,
+                itemStyle: {
+                    color: '#5470C6'
+                },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: {
+                                formatter: '平均值: {c} 秒',
                                 position: 'end'
                             },
                             lineStyle: {
@@ -239,6 +317,7 @@ window.addEventListener('resize', function() {
     const successRateChart = echarts.getInstanceByDom(document.getElementById('successRateChart'));
     const merchantChargeChart = echarts.getInstanceByDom(document.getElementById('merchantChargeChart'));
     const depositTimeChart = echarts.getInstanceByDom(document.getElementById('depositTimeChart'));
+    const withdrawalTimeChart = echarts.getInstanceByDom(document.getElementById('withdrawalTimeChart'));
     
     if (successRateChart) {
         successRateChart.resize();
@@ -248,5 +327,8 @@ window.addEventListener('resize', function() {
     }
     if (depositTimeChart) {
         depositTimeChart.resize();
+    }
+    if (withdrawalTimeChart) {
+        withdrawalTimeChart.resize();
     }
 });

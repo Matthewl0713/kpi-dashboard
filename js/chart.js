@@ -17,7 +17,11 @@ async function fetchData() {
         const dates = rows.map(row => row[0].replace(/"/g, ''));
         const depositRates = rows.map(row => parseFloat(row[1]));
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
-        const merchantCharges = rows.map(row => parseFloat(row[3].replace(/["\$,]/g, '')));
+        // 修改商户收费的解析方式
+        const merchantCharges = rows.map(row => {
+            const value = row[3].replace(/[\$,]/g, '');
+            return parseFloat(value);
+        });
         
         // 添加调试信息
         console.log('处理后的数据:', {
@@ -25,12 +29,6 @@ async function fetchData() {
             depositRates,
             withdrawalRates,
             merchantCharges
-        });
-        
-        // 检查 DOM 元素是否存在
-        console.log('图表容器:', {
-            successRate: document.getElementById('successRateChart'),
-            merchantCharge: document.getElementById('merchantChargeChart')
         });
         
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
@@ -44,7 +42,6 @@ async function fetchData() {
 
 function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     const chart = echarts.init(document.getElementById('successRateChart'));
-    console.log('初始化成功率图表');
     
     const option = {
         title: {
@@ -107,7 +104,6 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     };
 
     chart.setOption(option);
-    console.log('成功率图表设置完成');
 
     window.addEventListener('resize', function() {
         chart.resize();
@@ -116,7 +112,6 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
 
 function renderMerchantChargeChart(dates, merchantCharges) {
     const chart = echarts.init(document.getElementById('merchantChargeChart'));
-    console.log('初始化商户收费图表');
     
     const option = {
         title: {
@@ -127,7 +122,7 @@ function renderMerchantChargeChart(dates, merchantCharges) {
             trigger: 'axis',
             formatter: function(params) {
                 return params[0].axisValue + '<br/>' +
-                       '商户收费: $' + params[0].value;
+                       '商户收费: $' + params[0].value.toFixed(2);
             }
         },
         grid: {
@@ -145,6 +140,8 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         yAxis: {
             type: 'value',
+            min: 1230,  // 设置合适的最小值
+            max: 1270,  // 设置合适的最大值
             axisLabel: {
                 formatter: '${value}'
             }
@@ -167,7 +164,6 @@ function renderMerchantChargeChart(dates, merchantCharges) {
     };
 
     chart.setOption(option);
-    console.log('商户收费图表设置完成');
 
     window.addEventListener('resize', function() {
         chart.resize();

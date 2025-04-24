@@ -73,3 +73,114 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
             left: '3%',
             right: '4%',
             bottom: '15%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: 75,
+            max: 95,
+            axisLabel: {
+                formatter: '{value}%'
+            }
+        },
+        series: [
+            {
+                name: '存款成功率',
+                type: 'line',
+                data: depositRates,
+                itemStyle: {
+                    color: '#5470C6'
+                },
+                smooth: true
+            },
+            {
+                name: '取款成功率',
+                type: 'line',
+                data: withdrawalRates,
+                itemStyle: {
+                    color: '#91CC75'
+                },
+                smooth: true
+            }
+        ]
+    };
+
+    chart.setOption(option);
+
+    window.addEventListener('resize', function() {
+        chart.resize();
+    });
+}
+
+function renderMerchantChargeChart(dates, merchantCharges) {
+    const chart = echarts.init(document.getElementById('merchantChargeChart'));
+    
+    const option = {
+        title: {
+            text: '每日商户收费',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '商户收费: $' + params[0].value.toFixed(2);
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '15%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: Math.min(...merchantCharges) * 0.99,
+            max: Math.max(...merchantCharges) * 1.01,
+            axisLabel: {
+                formatter: function(value) {
+                    return '$' + value.toFixed(2);
+                }
+            }
+        },
+        series: [
+            {
+                name: '商户收费',
+                type: 'line',  // 改为折线图以保持一致的视觉效果
+                data: merchantCharges,
+                itemStyle: {
+                    color: '#91CC75'
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return '$' + params.value.toFixed(2);
+                    }
+                }
+            }
+        ]
+    };
+
+    chart.setOption(option);
+
+    window.addEventListener('resize', function() {
+        chart.resize();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', fetchData);

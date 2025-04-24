@@ -61,8 +61,9 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
         },
         yAxis: {
             type: 'value',
-            min: 80,
-            max: 95,
+            min: 75,
+            max: 100,
+            interval: 5,
             axisLabel: {
                 formatter: '{value}%'
             }
@@ -140,7 +141,7 @@ function renderMerchantChargeChart(dates, merchantCharges) {
                 },
                 barWidth: '60%',
                 label: {
-                    show: false  // 将标签显示设置为 false
+                    show: false
                 }
             }
         ]

@@ -7,6 +7,9 @@ async function fetchData() {
         const text = await response.text();
         const rows = text.split('\n').map(row => row.split(','));
         
+        // 添加调试信息
+        console.log('原始数据:', rows);
+        
         // 移除表头
         rows.shift();
         
@@ -16,15 +19,32 @@ async function fetchData() {
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
         const merchantCharges = rows.map(row => parseFloat(row[3].replace(/["\$,]/g, '')));
         
+        // 添加调试信息
+        console.log('处理后的数据:', {
+            dates,
+            depositRates,
+            withdrawalRates,
+            merchantCharges
+        });
+        
+        // 检查 DOM 元素是否存在
+        console.log('图表容器:', {
+            successRate: document.getElementById('successRateChart'),
+            merchantCharge: document.getElementById('merchantChargeChart')
+        });
+        
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
     } catch (error) {
         console.error('Error fetching data:', error);
+        document.getElementById('successRateChart').innerHTML = '数据加载失败，请刷新重试';
+        document.getElementById('merchantChargeChart').innerHTML = '数据加载失败，请刷新重试';
     }
 }
 
 function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     const chart = echarts.init(document.getElementById('successRateChart'));
+    console.log('初始化成功率图表');
     
     const option = {
         title: {
@@ -87,6 +107,7 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     };
 
     chart.setOption(option);
+    console.log('成功率图表设置完成');
 
     window.addEventListener('resize', function() {
         chart.resize();
@@ -95,6 +116,7 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
 
 function renderMerchantChargeChart(dates, merchantCharges) {
     const chart = echarts.init(document.getElementById('merchantChargeChart'));
+    console.log('初始化商户收费图表');
     
     const option = {
         title: {
@@ -145,6 +167,7 @@ function renderMerchantChargeChart(dates, merchantCharges) {
     };
 
     chart.setOption(option);
+    console.log('商户收费图表设置完成');
 
     window.addEventListener('resize', function() {
         chart.resize();

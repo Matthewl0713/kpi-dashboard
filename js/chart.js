@@ -17,11 +17,7 @@ async function fetchData() {
         const dates = rows.map(row => row[0].replace(/"/g, ''));
         const depositRates = rows.map(row => parseFloat(row[1]));
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
-        // 修改商户收费的解析方式
-        const merchantCharges = rows.map(row => {
-            const value = row[3].replace(/[\$,]/g, '');
-            return parseFloat(value);
-        });
+        const merchantCharges = rows.map(row => parseFloat(row[3])); // 简化的数据处理
         
         // 添加调试信息
         console.log('处理后的数据:', {
@@ -140,8 +136,6 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         yAxis: {
             type: 'value',
-            min: 1230,  // 设置合适的最小值
-            max: 1270,  // 设置合适的最大值
             axisLabel: {
                 formatter: '${value}'
             }

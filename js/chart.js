@@ -7,9 +7,6 @@ async function fetchData() {
         const text = await response.text();
         const rows = text.split('\n').map(row => row.split(','));
         
-        // 添加调试信息
-        console.log('原始数据:', rows);
-        
         // 移除表头
         rows.shift();
         
@@ -17,9 +14,8 @@ async function fetchData() {
         const dates = rows.map(row => row[0].replace(/"/g, ''));
         const depositRates = rows.map(row => parseFloat(row[1]));
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
-        const merchantCharges = rows.map(row => parseFloat(row[3])); // 简化的数据处理
+        const merchantCharges = rows.map(row => parseFloat(row[3]));
         
-        // 添加调试信息
         console.log('处理后的数据:', {
             dates,
             depositRates,
@@ -136,6 +132,8 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         yAxis: {
             type: 'value',
+            min: 1230,
+            max: 1270,
             axisLabel: {
                 formatter: '${value}'
             }

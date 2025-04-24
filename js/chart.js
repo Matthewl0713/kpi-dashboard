@@ -15,32 +15,9 @@ async function fetchData() {
         
         // 解析数据
         const dates = rows.map(row => row[0].replace(/"/g, ''));
-        console.log('日期数据:', dates);
-
         const depositRates = rows.map(row => parseFloat(row[1]));
-        console.log('存款率:', depositRates);
-
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
-        console.log('取款率:', withdrawalRates);
-
-        const merchantCharges = rows.map((row, index) => {
-            const rawValue = row[3];
-            console.log(`第${index + 1}行商户收费原始数据:`, rawValue);
-            
-            // 移除货币符号、逗号等，但保留数字和小数点
-            const cleanValue = rawValue.replace(/[^0-9.]/g, '');
-            const value = parseFloat(cleanValue);
-            
-            // 确保数值有效
-            if (isNaN(value)) {
-                console.error(`第${index + 1}行商户收费数据无效:`, rawValue);
-                return 0;
-            }
-            
-            console.log(`第${index + 1}行商户收费解析后:`, value);
-            return value;
-        });
-        console.log('商户收费数据:', merchantCharges);
+        const merchantCharges = rows.map(row => parseFloat(row[3].replace(/[^\d.]/g, '')));
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
@@ -113,10 +90,6 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     };
 
     chart.setOption(option);
-
-    window.addEventListener('resize', function() {
-        chart.resize();
-    });
 }
 
 function renderMerchantChargeChart(dates, merchantCharges) {
@@ -149,18 +122,14 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         yAxis: {
             type: 'value',
-            min: Math.min(...merchantCharges) * 0.99,
-            max: Math.max(...merchantCharges) * 1.01,
             axisLabel: {
-                formatter: function(value) {
-                    return '$' + value.toFixed(2);
-                }
+                formatter: '${value}'
             }
         },
         series: [
             {
                 name: '商户收费',
-                type: 'line',  // 改为折线图以保持一致的视觉效果
+                type: 'line',
                 data: merchantCharges,
                 itemStyle: {
                     color: '#91CC75'
@@ -168,19 +137,27 @@ function renderMerchantChargeChart(dates, merchantCharges) {
                 label: {
                     show: true,
                     position: 'top',
-                    formatter: function(params) {
-                        return '$' + params.value.toFixed(2);
-                    }
+                    formatter: '${c}'
                 }
             }
         ]
     };
 
     chart.setOption(option);
-
-    window.addEventListener('resize', function() {
-        chart.resize();
-    });
 }
 
+// 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', fetchData);
+
+// 监听窗口大小变化，调整图表大小
+window.addEventListener('resize', function() {
+    const successRateChart = echarts.getInstanceByDom(document.getElementById('successRateChart'));
+    const merchantChargeChart = echarts.getInstanceByDom(document.getElementById('merchantChargeChart'));
+    
+    if (successRateChart) {
+        successRateChart.resize();
+    }
+    if (merchantChargeChart) {
+        merchantChargeChart.resize();
+    }
+});

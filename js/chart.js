@@ -24,18 +24,16 @@ async function fetchData() {
         console.log('取款率:', withdrawalRates);
 
         const merchantCharges = rows.map((row, index) => {
-            console.log(`第${index + 1}行商户收费原始数据:`, row[3]);
-            const value = parseFloat(row[3]);
+            const rawValue = row[3];
+            console.log(`第${index + 1}行商户收费原始数据:`, rawValue);
+            // 移除所有非数字字符（除了小数点）
+            const cleanValue = rawValue.replace(/[^\d.]/g, '');
+            const value = parseFloat(cleanValue);
+            console.log(`第${index + 1}行商户收费清理后:`, cleanValue);
             console.log(`第${index + 1}行商户收费解析后:`, value);
             return value;
         });
         console.log('商户收费数据:', merchantCharges);
-        
-        // 检查数据是否有效
-        if (merchantCharges.some(isNaN)) {
-            console.error('存在无效的商户收费数据');
-            console.log('无效数据位置:', merchantCharges.map((v, i) => isNaN(v) ? i : -1).filter(i => i !== -1));
-        }
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);

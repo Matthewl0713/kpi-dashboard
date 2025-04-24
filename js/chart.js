@@ -5,10 +5,8 @@ async function fetchData() {
     try {
         const response = await fetch(SHEET_URL);
         const text = await response.text();
-        console.log('原始CSV文本:', text);
-
+        
         const rows = text.split('\n').map(row => row.split(','));
-        console.log('分割后的行数据:', rows);
         
         // 移除表头
         rows.shift();
@@ -17,7 +15,11 @@ async function fetchData() {
         const dates = rows.map(row => row[0].replace(/"/g, ''));
         const depositRates = rows.map(row => parseFloat(row[1]));
         const withdrawalRates = rows.map(row => parseFloat(row[2]));
-        const merchantCharges = rows.map(row => parseFloat(row[3].replace(/[^\d.]/g, '')));
+        const merchantCharges = rows.map(row => {
+            // 移除引号和货币符号，保留数字和小数点
+            const cleanValue = row[3].replace(/["\$,]/g, '');
+            return parseFloat(cleanValue);
+        });
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
@@ -61,8 +63,9 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
         },
         yAxis: {
             type: 'value',
-            min: 75,
+            min: 80,
             max: 95,
+            interval: 5,
             axisLabel: {
                 formatter: '{value}%'
             }
@@ -95,6 +98,13 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
 function renderMerchantChargeChart(dates, merchantCharges) {
     const chart = echarts.init(document.getElementById('merchantChargeChart'));
     
+    // 计算合适的 Y 轴范围
+    const minValue = Math.min(...merchantCharges);
+    const maxValue = Math.max(...merchantCharges);
+    const valueRange = maxValue - minValue;
+    const yMin = Math.floor(minValue - valueRange * 0.1);
+    const yMax = Math.ceil(maxValue + valueRange * 0.1);
+    
     const option = {
         title: {
             text: '每日商户收费',
@@ -122,8 +132,12 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         yAxis: {
             type: 'value',
+            min: yMin,
+            max: yMax,
             axisLabel: {
-                formatter: '${value}'
+                formatter: function(value) {
+                    return '$' + value.toFixed(2);
+                }
             }
         },
         series: [
@@ -137,8 +151,11 @@ function renderMerchantChargeChart(dates, merchantCharges) {
                 label: {
                     show: true,
                     position: 'top',
-                    formatter: '${c}'
-                }
+                    formatter: function(params) {
+                        return '$' + params.value.toFixed(2);
+                    }
+                },
+                smooth: true
             }
         ]
     };

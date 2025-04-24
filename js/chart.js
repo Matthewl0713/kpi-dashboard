@@ -110,4 +110,45 @@ function renderMerchantChargeChart(dates, merchantCharges) {
         },
         grid: {
             left: '3%',
-            right: '4
+            right: '4%',
+            bottom: '15%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: '${value}'
+            }
+        },
+        series: [
+            {
+                name: '商户收费',
+                type: 'bar',
+                data: merchantCharges,
+                itemStyle: {
+                    color: '#91CC75'
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: '${c}'
+                }
+            }
+        ]
+    };
+
+    chart.setOption(option);
+
+    window.addEventListener('resize', function() {
+        chart.resize();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', fetchData);

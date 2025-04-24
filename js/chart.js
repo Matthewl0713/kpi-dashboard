@@ -1,40 +1,11 @@
-const SHEET_ID = '1IGNvGmPVLPId6pXY1kQi-c7giSnd1AdAqra4TYM6PHY';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1700953298`;
-
-async function fetchData() {
-    try {
-        const response = await fetch(SHEET_URL);
-        const text = await response.text();
-        
-        const rows = text.split('\n').map(row => row.split(','));
-        
-        // 移除表头
-        rows.shift();
-        
-        // 解析数据
-        const dates = rows.map(row => row[0].replace(/"/g, ''));
-        const depositRates = rows.map(row => parseFloat(row[1]));
-        const withdrawalRates = rows.map(row => parseFloat(row[2]));
-        const merchantCharges = rows.map(row => {
-            // 移除引号和货币符号，保留数字和小数点
-            const cleanValue = row[3].replace(/["\$,]/g, '');
-            return parseFloat(cleanValue);
-        });
-
-        renderSuccessRateChart(dates, depositRates, withdrawalRates);
-        renderMerchantChargeChart(dates, merchantCharges);
-    } catch (error) {
-        console.error('数据获取或处理错误:', error);
-    }
-}
-
 function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     const chart = echarts.init(document.getElementById('successRateChart'));
     
     const option = {
         title: {
             text: '存取款成功率趋势对比',
-            left: 'center'
+            left: 'center',
+            top: 10  // 调整标题位置
         },
         tooltip: {
             trigger: 'axis',
@@ -46,19 +17,21 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
         },
         legend: {
             data: ['存款成功率', '取款成功率'],
-            bottom: 10
+            bottom: 0  // 调整图例位置
         },
         grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '15%',
+            top: 60,      // 调整上边距
+            bottom: 60,   // 调整下边距
+            left: 50,     // 调整左边距
+            right: 30,    // 调整右边距
             containLabel: true
         },
         xAxis: {
             type: 'category',
             data: dates,
             axisLabel: {
-                rotate: 45
+                rotate: 45,
+                margin: 15  // 调整标签与轴的距离
             }
         },
         yAxis: {
@@ -78,7 +51,9 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
                 itemStyle: {
                     color: '#5470C6'
                 },
-                smooth: true
+                smooth: true,
+                symbol: 'circle',  // 添加数据点标记
+                symbolSize: 6      // 设置数据点大小
             },
             {
                 name: '取款成功率',
@@ -87,7 +62,9 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
                 itemStyle: {
                     color: '#91CC75'
                 },
-                smooth: true
+                smooth: true,
+                symbol: 'circle',  // 添加数据点标记
+                symbolSize: 6      // 设置数据点大小
             }
         ]
     };
@@ -98,17 +75,11 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
 function renderMerchantChargeChart(dates, merchantCharges) {
     const chart = echarts.init(document.getElementById('merchantChargeChart'));
     
-    // 计算合适的 Y 轴范围
-    const minValue = Math.min(...merchantCharges);
-    const maxValue = Math.max(...merchantCharges);
-    const valueRange = maxValue - minValue;
-    const yMin = Math.floor(minValue - valueRange * 0.1);
-    const yMax = Math.ceil(maxValue + valueRange * 0.1);
-    
     const option = {
         title: {
             text: '每日商户收费',
-            left: 'center'
+            left: 'center',
+            top: 10  // 调整标题位置
         },
         tooltip: {
             trigger: 'axis',
@@ -118,26 +89,26 @@ function renderMerchantChargeChart(dates, merchantCharges) {
             }
         },
         grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '15%',
+            top: 60,      // 调整上边距
+            bottom: 60,   // 调整下边距
+            left: 50,     // 调整左边距
+            right: 30,    // 调整右边距
             containLabel: true
         },
         xAxis: {
             type: 'category',
             data: dates,
             axisLabel: {
-                rotate: 45
+                rotate: 45,
+                margin: 15  // 调整标签与轴的距离
             }
         },
         yAxis: {
             type: 'value',
-            min: yMin,
-            max: yMax,
+            min: 1230,
+            max: 1270,
             axisLabel: {
-                formatter: function(value) {
-                    return '$' + value.toFixed(2);
-                }
+                formatter: '${value}'
             }
         },
         series: [
@@ -151,11 +122,11 @@ function renderMerchantChargeChart(dates, merchantCharges) {
                 label: {
                     show: true,
                     position: 'top',
-                    formatter: function(params) {
-                        return '$' + params.value.toFixed(2);
-                    }
+                    formatter: '${c}'
                 },
-                smooth: true
+                smooth: true,
+                symbol: 'circle',  // 添加数据点标记
+                symbolSize: 6      // 设置数据点大小
             }
         ]
     };
@@ -163,18 +134,4 @@ function renderMerchantChargeChart(dates, merchantCharges) {
     chart.setOption(option);
 }
 
-// 页面加载完成后初始化图表
-document.addEventListener('DOMContentLoaded', fetchData);
-
-// 监听窗口大小变化，调整图表大小
-window.addEventListener('resize', function() {
-    const successRateChart = echarts.getInstanceByDom(document.getElementById('successRateChart'));
-    const merchantChargeChart = echarts.getInstanceByDom(document.getElementById('merchantChargeChart'));
-    
-    if (successRateChart) {
-        successRateChart.resize();
-    }
-    if (merchantChargeChart) {
-        merchantChargeChart.resize();
-    }
-});
+// 其他代码保持不变...

@@ -26,10 +26,17 @@ async function fetchData() {
         const merchantCharges = rows.map((row, index) => {
             const rawValue = row[3];
             console.log(`第${index + 1}行商户收费原始数据:`, rawValue);
-            // 移除所有非数字字符（除了小数点）
-            const cleanValue = rawValue.replace(/[^\d.]/g, '');
+            
+            // 移除货币符号、逗号等，但保留数字和小数点
+            const cleanValue = rawValue.replace(/[^0-9.]/g, '');
             const value = parseFloat(cleanValue);
-            console.log(`第${index + 1}行商户收费清理后:`, cleanValue);
+            
+            // 确保数值有效
+            if (isNaN(value)) {
+                console.error(`第${index + 1}行商户收费数据无效:`, rawValue);
+                return 0;
+            }
+            
             console.log(`第${index + 1}行商户收费解析后:`, value);
             return value;
         });
@@ -66,110 +73,3 @@ function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
             left: '3%',
             right: '4%',
             bottom: '15%',
-            containLabel: true
-        },
-        xAxis: {
-            type: 'category',
-            data: dates,
-            axisLabel: {
-                rotate: 45
-            }
-        },
-        yAxis: {
-            type: 'value',
-            min: 75,
-            max: 95,
-            axisLabel: {
-                formatter: '{value}%'
-            }
-        },
-        series: [
-            {
-                name: '存款成功率',
-                type: 'line',
-                data: depositRates,
-                itemStyle: {
-                    color: '#5470C6'
-                },
-                smooth: true
-            },
-            {
-                name: '取款成功率',
-                type: 'line',
-                data: withdrawalRates,
-                itemStyle: {
-                    color: '#91CC75'
-                },
-                smooth: true
-            }
-        ]
-    };
-
-    chart.setOption(option);
-
-    window.addEventListener('resize', function() {
-        chart.resize();
-    });
-}
-
-function renderMerchantChargeChart(dates, merchantCharges) {
-    const chart = echarts.init(document.getElementById('merchantChargeChart'));
-    
-    const option = {
-        title: {
-            text: '每日商户收费',
-            left: 'center'
-        },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function(params) {
-                return params[0].axisValue + '<br/>' +
-                       '商户收费: $' + params[0].value.toFixed(2);
-            }
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '15%',
-            containLabel: true
-        },
-        xAxis: {
-            type: 'category',
-            data: dates,
-            axisLabel: {
-                rotate: 45
-            }
-        },
-        yAxis: {
-            type: 'value',
-            min: 1230,
-            max: 1270,
-            axisLabel: {
-                formatter: '${value}'
-            }
-        },
-        series: [
-            {
-                name: '商户收费',
-                type: 'bar',
-                data: merchantCharges,
-                itemStyle: {
-                    color: '#91CC75'
-                },
-                label: {
-                    show: true,
-                    position: 'top',
-                    formatter: '${c}'
-                }
-            }
-        ]
-    };
-
-    chart.setOption(option);
-
-    window.addEventListener('resize', function() {
-        chart.resize();
-    });
-}
-
-document.addEventListener('DOMContentLoaded', fetchData);

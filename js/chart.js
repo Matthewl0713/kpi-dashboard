@@ -17,11 +17,13 @@ async function fetchData() {
         const rows2 = text2.split('\n').map(row => row.split(','));
         rows2.shift();
         
-        // 获取第三个 Sheet 的数据（银行账户使用率）
+        // 获取第三个 Sheet 的数据（银行账户使用率和租金）
         const response3 = await fetch(SHEET3_URL);
         const text3 = await response3.text();
         const rows3 = text3.split('\n').map(row => row.split(','));
         rows3.shift(); // 移除标题行
+
+        console.log('Sheet 3 原始数据:', rows3);
         
         // 解析第一个 Sheet 的数据
         const dates = rows1.map(row => row[0].replace(/"/g, ''));
@@ -33,15 +35,23 @@ async function fetchData() {
         const depositTimes = rows2.map(row => parseFloat(row[1]));
         const withdrawalTimes = rows2.map(row => parseFloat(row[2]));
 
-        // 解析第三个 Sheet 的数据（银行账户使用率）
-        const months = rows3.map(row => row[0]);
+        // 解析第三个 Sheet 的数据（银行账户使用率和租金）
+        const months = rows3.map(row => row[0].trim());
         const usageRates = rows3.map(row => parseFloat(row[1]));
+        const rentalFees = rows3.map(row => parseInt(row[2])); // 直接解析为整数
+
+        console.log('处理后的数据:', {
+            months,
+            usageRates,
+            rentalFees
+        });
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
         renderDepositTimeChart(dates, depositTimes);
         renderWithdrawalTimeChart(dates, withdrawalTimes);
         renderBankAccountUsageChart(months, usageRates);
+        renderBankAccountRentalChart(months, rentalFees);
     } catch (error) {
         console.error('数据获取或处理错误:', error);
     }
@@ -367,6 +377,66 @@ function renderBankAccountUsageChart(months, usageRates) {
     chart.setOption(option);
 }
 
+function renderBankAccountRentalChart(months, rentalFees) {
+    const chart = echarts.init(document.getElementById('bankAccountRentalChart'));
+    
+    const option = {
+        title: {
+            text: '银行账户租金',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '租金: $' + params[0].value.toLocaleString();
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '15%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: months,
+            axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: function(value) {
+                    return '$' + value.toLocaleString();
+                }
+            }
+        },
+        series: [
+            {
+                name: '租金',
+                type: 'bar',
+                data: rentalFees,
+                itemStyle: {
+                    color: '#5470C6',
+                    borderRadius: [4, 4, 0, 0]
+                },
+                barWidth: '60%',
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return '$' + params.value.toLocaleString();
+                    }
+                }
+            }
+        ]
+    };
+
+    chart.setOption(option);
+}
+
 // 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', fetchData);
 
@@ -377,10 +447,12 @@ window.addEventListener('resize', function() {
     const depositTimeChart = echarts.getInstanceByDom(document.getElementById('depositTimeChart'));
     const withdrawalTimeChart = echarts.getInstanceByDom(document.getElementById('withdrawalTimeChart'));
     const bankAccountUsageChart = echarts.getInstanceByDom(document.getElementById('bankAccountUsageChart'));
+    const bankAccountRentalChart = echarts.getInstanceByDom(document.getElementById('bankAccountRentalChart'));
     
     if (successRateChart) successRateChart.resize();
     if (merchantChargeChart) merchantChargeChart.resize();
     if (depositTimeChart) depositTimeChart.resize();
     if (withdrawalTimeChart) withdrawalTimeChart.resize();
     if (bankAccountUsageChart) bankAccountUsageChart.resize();
+    if (bankAccountRentalChart) bankAccountRentalChart.resize();
 });

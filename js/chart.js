@@ -1,6 +1,7 @@
 const SHEET_ID = '1IGNvGmPVLPId6pXY1kQi-c7giSnd1AdAqra4TYM6PHY';
 const SHEET1_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1700953298`;
 const SHEET2_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=2061498883`;
+const SHEET3_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
 async function fetchData() {
     try {
@@ -16,6 +17,12 @@ async function fetchData() {
         const rows2 = text2.split('\n').map(row => row.split(','));
         rows2.shift();
         
+        // 获取第三个 Sheet 的数据（银行账户使用率）
+        const response3 = await fetch(SHEET3_URL);
+        const text3 = await response3.text();
+        const rows3 = text3.split('\n').map(row => row.split(','));
+        rows3.shift(); // 移除标题行
+        
         // 解析第一个 Sheet 的数据
         const dates = rows1.map(row => row[0].replace(/"/g, ''));
         const depositRates = rows1.map(row => parseFloat(row[1]));
@@ -26,10 +33,15 @@ async function fetchData() {
         const depositTimes = rows2.map(row => parseFloat(row[1]));
         const withdrawalTimes = rows2.map(row => parseFloat(row[2]));
 
+        // 解析第三个 Sheet 的数据（银行账户使用率）
+        const months = rows3.map(row => row[0]);
+        const usageRates = rows3.map(row => parseFloat(row[1]));
+
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
         renderDepositTimeChart(dates, depositTimes);
         renderWithdrawalTimeChart(dates, withdrawalTimes);
+        renderBankAccountUsageChart(months, usageRates);
     } catch (error) {
         console.error('数据获取或处理错误:', error);
     }
@@ -309,6 +321,52 @@ function renderWithdrawalTimeChart(dates, withdrawalTimes) {
     chart.setOption(option);
 }
 
+function renderBankAccountUsageChart(months, usageRates) {
+    const chart = echarts.init(document.getElementById('bankAccountUsageChart'));
+    
+    // 准备饼图数据
+    const data = months.map((month, index) => ({
+        value: usageRates[index],
+        name: month
+    }));
+
+    const option = {
+        title: {
+            text: '银行账户使用率分布',
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: '{b}: {c}%'
+        },
+        legend: {
+            orient: 'vertical',
+            left: 'left',
+            padding: 5
+        },
+        series: [
+            {
+                name: '使用率',
+                type: 'pie',
+                radius: '60%',
+                data: data,
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                },
+                label: {
+                    formatter: '{b}: {c}%'
+                }
+            }
+        ]
+    };
+
+    chart.setOption(option);
+}
+
 // 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', fetchData);
 
@@ -318,17 +376,11 @@ window.addEventListener('resize', function() {
     const merchantChargeChart = echarts.getInstanceByDom(document.getElementById('merchantChargeChart'));
     const depositTimeChart = echarts.getInstanceByDom(document.getElementById('depositTimeChart'));
     const withdrawalTimeChart = echarts.getInstanceByDom(document.getElementById('withdrawalTimeChart'));
+    const bankAccountUsageChart = echarts.getInstanceByDom(document.getElementById('bankAccountUsageChart'));
     
-    if (successRateChart) {
-        successRateChart.resize();
-    }
-    if (merchantChargeChart) {
-        merchantChargeChart.resize();
-    }
-    if (depositTimeChart) {
-        depositTimeChart.resize();
-    }
-    if (withdrawalTimeChart) {
-        withdrawalTimeChart.resize();
-    }
+    if (successRateChart) successRateChart.resize();
+    if (merchantChargeChart) merchantChargeChart.resize();
+    if (depositTimeChart) depositTimeChart.resize();
+    if (withdrawalTimeChart) withdrawalTimeChart.resize();
+    if (bankAccountUsageChart) bankAccountUsageChart.resize();
 });

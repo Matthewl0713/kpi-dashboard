@@ -337,7 +337,7 @@ function renderBankAccountUsageChart(months, usageRates) {
         },
         tooltip: {
             trigger: 'item',
-            formatter: '{b}: {c}%'
+            formatter: '{b}: {c}'
         },
         legend: {
             orient: 'vertical',
@@ -358,7 +358,7 @@ function renderBankAccountUsageChart(months, usageRates) {
                     }
                 },
                 label: {
-                    formatter: '{b}: {c}%'
+                    formatter: '{b}: {c}'
                 }
             }
         ]

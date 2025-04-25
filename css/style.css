@@ -20,6 +20,17 @@ h1 {
     color: #333;
 }
 
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 16px;
+    color: #666;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .dashboard {
     background-color: #fff;
     border-radius: 10px;
@@ -51,4 +62,14 @@ footer {
     text-align: center;
     margin-top: 30px;
     color: #666;
+}
+
+@media (max-width: 768px) {
+    .charts-row {
+        flex-direction: column;
+    }
+    
+    .chart-container {
+        margin-bottom: 20px;
+    }
 }

@@ -69,7 +69,7 @@ async function fetchData() {
         const responseDates = rows4.map(row => row[0].replace(/"/g, ''));
         const responseSpeeds = rows4.map(row => parseFloat(row[1]));
 
-        // 解析第五个 Sheet 的数据（SIM 卡使用情况）【修正】
+        // 解析第五个 Sheet 的数据（SIM 卡使用情况）
         const simCardValidRows = rows5.filter(row => row[0] && row[1] && !isNaN(parseFloat(row[1])));
         const simCardDates = simCardValidRows.map(row => row[0].replace(/"/g, ''));
         const simCardUsage = simCardValidRows.map(row => parseFloat(row[1]));
@@ -95,8 +95,291 @@ async function fetchData() {
     }
 }
 
-// 其余渲染函数保持不变...
-// ...（此处省略，您原有的 renderXXXChart 函数全部保留）
+function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
+    const chart = echarts.init(document.getElementById('successRateChart'));
+    const option = {
+        title: { text: '存取款成功率趋势对比', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       params[0].seriesName + ': ' + params[0].value + '%<br/>' +
+                       params[1].seriesName + ': ' + params[1].value + '%';
+            }
+        },
+        legend: { data: ['存款成功率', '取款成功率'], bottom: 10 },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value', min: 75, max: 100, interval: 5, axisLabel: { formatter: '{value}%' } },
+        series: [
+            { name: '存款成功率', type: 'line', data: depositRates, itemStyle: { color: '#5470C6' }, smooth: true },
+            { name: '取款成功率', type: 'line', data: withdrawalRates, itemStyle: { color: '#91CC75' }, smooth: true }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderMerchantChargeChart(dates, merchantCharges) {
+    const chart = echarts.init(document.getElementById('merchantChargeChart'));
+    const option = {
+        title: { text: '每日商户收费', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '商户收费: $' + params[0].value.toFixed(2);
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value', min: 1230, max: 1270, splitNumber: 8, axisLabel: { formatter: '${value}' } },
+        series: [
+            {
+                name: '商户收费',
+                type: 'bar',
+                data: merchantCharges,
+                itemStyle: { color: '#91CC75', borderRadius: [4, 4, 0, 0] },
+                barWidth: '60%',
+                label: { show: false }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderDepositTimeChart(dates, depositTimes) {
+    const chart = echarts.init(document.getElementById('depositTimeChart'));
+    const option = {
+        title: { text: '每日平均手动存款时间', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '平均时间: ' + params[0].value + ' 秒';
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
+        yAxis: {
+            type: 'value',
+            min: 0,
+            max: 50,
+            interval: 5,
+            axisLabel: { formatter: '{value} 秒' },
+            splitLine: { show: true, lineStyle: { type: 'dashed' } }
+        },
+        series: [
+            {
+                name: '存款时间',
+                type: 'line',
+                data: depositTimes,
+                itemStyle: { color: '#5470C6' },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: { formatter: '平均值: {c} 秒', position: 'end' },
+                            lineStyle: { type: 'dashed' }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderWithdrawalTimeChart(dates, withdrawalTimes) {
+    const chart = echarts.init(document.getElementById('withdrawalTimeChart'));
+    const option = {
+        title: { text: '每日平均手动取款时间', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '平均时间: ' + params[0].value + ' 秒';
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
+        yAxis: {
+            type: 'value',
+            min: 50,
+            max: 110,
+            interval: 5,
+            axisLabel: { formatter: '{value} 秒' },
+            splitLine: { show: true, lineStyle: { type: 'dashed' } }
+        },
+        series: [
+            {
+                name: '取款时间',
+                type: 'line',
+                data: withdrawalTimes,
+                itemStyle: { color: '#5470C6' },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: { formatter: '平均值: {c} 秒', position: 'end' },
+                            lineStyle: { type: 'dashed' }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderBankAccountUsageChart(months, usageRates) {
+    const chart = echarts.init(document.getElementById('bankAccountUsageChart'));
+    const option = {
+        title: { text: '银行账户使用率', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: months, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value', name: '使用率 (%)', min: 0, max: 100 },
+        series: [{
+            name: '使用率',
+            type: 'line',
+            data: usageRates,
+            smooth: true,
+            lineStyle: { width: 3 },
+            itemStyle: { color: '#5470c6' }
+        }]
+    };
+    chart.setOption(option);
+}
+
+function renderBankAccountRentalChart(months, rentalFees) {
+    const chart = echarts.init(document.getElementById('bankAccountRentalChart'));
+    const option = {
+        title: { text: '银行账户租金', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '租金: $' + params[0].value.toLocaleString();
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: months, axisLabel: { rotate: 45 } },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: function(value) {
+                    return '$' + value.toLocaleString();
+                }
+            }
+        },
+        series: [
+            {
+                name: '租金',
+                type: 'bar',
+                data: rentalFees,
+                itemStyle: { color: '#5470C6', borderRadius: [4, 4, 0, 0] },
+                barWidth: '60%',
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return '$' + params.value.toLocaleString();
+                    }
+                }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderResponseSpeedChart(dates, speeds) {
+    const chart = echarts.init(document.getElementById('responseSpeedChart'));
+    const option = {
+        title: { text: '每日平均首次响应速度', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '响应速度: ' + params[0].value + ' 秒';
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: dates, axisLabel: { rotate: 45 } },
+        yAxis: {
+            type: 'value',
+            axisLabel: { formatter: '{value} 秒' },
+            splitLine: { show: true, lineStyle: { type: 'dashed' } }
+        },
+        series: [
+            {
+                name: '响应速度',
+                type: 'line',
+                areaStyle: { opacity: 0.3 },
+                data: speeds,
+                itemStyle: { color: '#5470C6' },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: { formatter: '平均值: {c} 秒', position: 'end' }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderSimCardUsageChart(dates, usage) {
+    const chart = echarts.init(document.getElementById('simCardUsageChart'));
+    const option = {
+        title: { text: '每日 SIM 卡使用量', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>使用量: ' + params[0].value;
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: dates, axisLabel: { rotate: 45 } },
+        yAxis: {
+            type: 'value',
+            name: '使用量',
+            axisLabel: { formatter: '{value}' },
+            splitLine: { show: true, lineStyle: { type: 'dashed' } }
+        },
+        series: [
+            {
+                name: 'SIM卡使用量',
+                type: 'line',
+                areaStyle: { opacity: 0.3 },
+                data: usage,
+                itemStyle: { color: '#5470C6' },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: { formatter: '平均值: {c}', position: 'end' }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
 
 // 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', function() {

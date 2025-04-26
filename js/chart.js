@@ -3,7 +3,7 @@ const SHEET1_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?fo
 const SHEET2_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=2061498883`;
 const SHEET3_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 const SHEET4_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=275391102`;
-const SHEET5_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=915907336`; // SIM卡
+const SHEET5_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=915907336`; // SIM卡和注册账号
 
 async function fetchData() {
     const loading = document.getElementById('loading');
@@ -43,7 +43,7 @@ async function fetchData() {
         const rows4 = text4.split('\n').map(row => row.split(','));
         rows4.shift();
 
-        // 获取第五个 Sheet 的数据（SIM 卡使用情况）
+        // 获取第五个 Sheet 的数据（SIM 卡和注册账号）
         const response5 = await fetch(SHEET5_URL, fetchOptions);
         if (!response5.ok) throw new Error(`HTTP error! status: ${response5.status}`);
         const text5 = await response5.text();
@@ -69,10 +69,11 @@ async function fetchData() {
         const responseDates = rows4.map(row => row[0].replace(/"/g, ''));
         const responseSpeeds = rows4.map(row => parseFloat(row[1]));
 
-        // 解析第五个 Sheet 的数据（SIM 卡使用情况）
-        const simCardValidRows = rows5.filter(row => row[0] && row[1] && !isNaN(parseFloat(row[1])));
-        const simCardDates = simCardValidRows.map(row => row[0].replace(/"/g, ''));
-        const simCardUsage = simCardValidRows.map(row => parseFloat(row[1]));
+        // 解析第五个 Sheet 的数据（SIM 卡和注册账号）
+        const validRows5 = rows5.filter(row => row[0] && row[1] && !isNaN(parseFloat(row[1])) && row[2] && !isNaN(parseFloat(row[2])));
+        const simCardDates = validRows5.map(row => row[0].replace(/"/g, ''));
+        const simCardUsage = validRows5.map(row => parseFloat(row[1]));
+        const registerAccount = validRows5.map(row => parseFloat(row[2]));
 
         // 渲染所有图表
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
@@ -83,6 +84,7 @@ async function fetchData() {
         renderBankAccountRentalChart(months, rentalFees);
         renderResponseSpeedChart(responseDates, responseSpeeds);
         renderSimCardUsageChart(simCardDates, simCardUsage);
+        renderRegisterAccountChart(simCardDates, registerAccount);
 
         if (loading) loading.style.display = 'none';
     } catch (error) {
@@ -95,6 +97,7 @@ async function fetchData() {
     }
 }
 
+// 下面是所有图表的渲染函数（和你原有代码一致，新增了注册账号面积图）
 function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
     const chart = echarts.init(document.getElementById('successRateChart'));
     const option = {
@@ -381,6 +384,30 @@ function renderSimCardUsageChart(dates, usage) {
     chart.setOption(option);
 }
 
+function renderRegisterAccountChart(dates, registerAccount) {
+    const chart = echarts.init(document.getElementById('registerAccountChart'));
+    const option = {
+        title: { text: '每日注册账号总数', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: dates, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value', name: '注册账号数', axisLabel: { formatter: '{value}' }, splitLine: { show: true, lineStyle: { type: 'dashed' } } },
+        series: [{
+            name: '注册账号数',
+            type: 'line',
+            areaStyle: { opacity: 0.3 },
+            data: registerAccount,
+            itemStyle: { color: '#91CC75' },
+            smooth: true,
+            markLine: {
+                silent: true,
+                data: [{ type: 'average', name: '平均值', label: { formatter: '平均值: {c}', position: 'end' } }]
+            }
+        }]
+    };
+    chart.setOption(option);
+}
+
 // 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', function() {
     fetchData().catch(error => {
@@ -398,7 +425,8 @@ window.addEventListener('resize', function() {
         'bankAccountUsageChart',
         'bankAccountRentalChart',
         'responseSpeedChart',
-        'simCardUsageChart'
+        'simCardUsageChart',
+        'registerAccountChart'
     ].forEach(id => {
         const chart = echarts.getInstanceByDom(document.getElementById(id));
         if (chart) chart.resize();

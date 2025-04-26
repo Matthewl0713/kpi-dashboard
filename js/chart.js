@@ -3,7 +3,6 @@ const SHEET1_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?fo
 const SHEET2_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=2061498883`;
 const SHEET3_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 const SHEET4_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=275391102`;
-const SHEET5_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=915907336`;
 
 async function fetchData() {
     const loading = document.getElementById('loading');
@@ -43,13 +42,6 @@ async function fetchData() {
         const rows4 = text4.split('\n').map(row => row.split(','));
         rows4.shift();
 
-        // 获取第五个 Sheet 的数据（SIM 卡使用情况）
-        const response5 = await fetch(SHEET5_URL, fetchOptions);
-        if (!response5.ok) throw new Error(`HTTP error! status: ${response5.status}`);
-        const text5 = await response5.text();
-        const rows5 = text5.split('\n').map(row => row.split(','));
-        rows5.shift();
-
         console.log('数据获取成功，开始处理数据...');
         
         // 解析第一个 Sheet 的数据
@@ -71,10 +63,6 @@ async function fetchData() {
         const responseDates = rows4.map(row => row[0].replace(/"/g, ''));
         const responseSpeeds = rows4.map(row => parseFloat(row[1]));
 
-        // 解析第五个 Sheet 的数据（SIM 卡使用情况）
-        const simCardDates = rows5.map(row => row[0].replace(/"/g, ''));
-        const simCardUsage = rows5.map(row => parseFloat(row[1]));
-
         console.log('数据处理完成，开始渲染图表...');
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
@@ -84,7 +72,6 @@ async function fetchData() {
         renderBankAccountUsageChart(months, usageRates);
         renderBankAccountRentalChart(months, rentalFees);
         renderResponseSpeedChart(responseDates, responseSpeeds);
-        renderSimCardUsageChart(simCardDates, simCardUsage);
 
         if (loading) loading.style.display = 'none';
     } catch (error) {
@@ -374,39 +361,44 @@ function renderWithdrawalTimeChart(dates, withdrawalTimes) {
 function renderBankAccountUsageChart(months, usageRates) {
     const chart = echarts.init(document.getElementById('bankAccountUsageChart'));
     
+    // 准备饼图数据
+    const data = months.map((month, index) => ({
+        value: usageRates[index],
+        name: month
+    }));
+
     const option = {
         title: {
-            text: '银行账户使用率',
+            text: '银行账户使用率分布',
             left: 'center'
         },
         tooltip: {
-            trigger: 'axis'
+            trigger: 'item',
+            formatter: '{b}: {c}'
         },
-        xAxis: {
-            type: 'category',
-            data: months,
-            axisLabel: {
-                rotate: 45
+        legend: {
+            orient: 'vertical',
+            left: 'left',
+            padding: 5
+        },
+        series: [
+            {
+                name: '使用率',
+                type: 'pie',
+                radius: '60%',
+                data: data,
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                },
+                label: {
+                    formatter: '{b}: {c}'
+                }
             }
-        },
-        yAxis: {
-            type: 'value',
-            name: '使用率 (%)',
-            min: 0,
-            max: 100
-        },
-        series: [{
-            name: '使用率',
-            type: 'line',
-            data: usageRates,
-            smooth: true,
-            lineStyle: {
-                width: 3
-            },
-            itemStyle: {
-                color: '#5470c6'
-            }
-        }]
+        ]
     };
 
     chart.setOption(option);
@@ -498,3 +490,76 @@ function renderResponseSpeedChart(dates, speeds) {
             boundaryGap: false,
             data: dates,
             axisLabel: {
+                rotate: 45
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: '{value} 秒'
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    type: 'dashed'
+                }
+            }
+        },
+        series: [
+            {
+                name: '响应速度',
+                type: 'line',
+                areaStyle: {
+                    opacity: 0.3
+                },
+                data: speeds,
+                itemStyle: {
+                    color: '#5470C6'
+                },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: {
+                                formatter: '平均值: {c} 秒',
+                                position: 'end'
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+
+    chart.setOption(option);
+}
+
+// 页面加载完成后初始化图表
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('页面加载完成，开始获取数据...');
+    fetchData().catch(error => {
+        console.error('初始化失败:', error);
+    });
+});
+
+// 监听窗口大小变化，调整图表大小
+window.addEventListener('resize', function() {
+    const successRateChart = echarts.getInstanceByDom(document.getElementById('successRateChart'));
+    const merchantChargeChart = echarts.getInstanceByDom(document.getElementById('merchantChargeChart'));
+    const depositTimeChart = echarts.getInstanceByDom(document.getElementById('depositTimeChart'));
+    const withdrawalTimeChart = echarts.getInstanceByDom(document.getElementById('withdrawalTimeChart'));
+    const bankAccountUsageChart = echarts.getInstanceByDom(document.getElementById('bankAccountUsageChart'));
+    const bankAccountRentalChart = echarts.getInstanceByDom(document.getElementById('bankAccountRentalChart'));
+    const responseSpeedChart = echarts.getInstanceByDom(document.getElementById('responseSpeedChart'));
+    
+    if (successRateChart) successRateChart.resize();
+    if (merchantChargeChart) merchantChargeChart.resize();
+    if (depositTimeChart) depositTimeChart.resize();
+    if (withdrawalTimeChart) withdrawalTimeChart.resize();
+    if (bankAccountUsageChart) bankAccountUsageChart.resize();
+    if (bankAccountRentalChart) bankAccountRentalChart.resize();
+    if (responseSpeedChart) responseSpeedChart.resize();
+});

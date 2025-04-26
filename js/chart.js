@@ -5,6 +5,8 @@ const SHEET3_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?fo
 const SHEET4_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=275391102`;
 const SHEET5_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=915907336`; // SIM卡和注册账号
 
+let allData = {};
+
 async function fetchData() {
     const loading = document.getElementById('loading');
     try {
@@ -75,16 +77,14 @@ async function fetchData() {
         const simCardUsage = validRows5.map(row => parseFloat(row[1]));
         const registerAccount = validRows5.map(row => parseFloat(row[2]));
 
-        // 渲染所有图表
-        renderSuccessRateChart(dates, depositRates, withdrawalRates);
-        renderMerchantChargeChart(dates, merchantCharges);
-        renderDepositTimeChart(dates, depositTimes);
-        renderWithdrawalTimeChart(dates, withdrawalTimes);
-        renderBankAccountUsageChart(months, usageRates);
-        renderBankAccountRentalChart(months, rentalFees);
-        renderResponseSpeedChart(responseDates, responseSpeeds);
-        renderSimCardUsageChart(simCardDates, simCardUsage);
-        renderRegisterAccountChart(simCardDates, registerAccount);
+        allData = {
+            dates, depositRates, withdrawalRates, merchantCharges,
+            depositTimes, withdrawalTimes, months, usageRates, rentalFees,
+            responseDates, responseSpeeds, simCardDates, simCardUsage, registerAccount
+        };
+
+        generateMonthOptions(simCardDates);
+        renderAllCharts(allData);
 
         if (loading) loading.style.display = 'none';
     } catch (error) {
@@ -97,59 +97,96 @@ async function fetchData() {
     }
 }
 
-// 下面是所有图表的渲染函数（和你原有代码一致，新增了注册账号面积图）
-function renderSuccessRateChart(dates, depositRates, withdrawalRates) {
-    const chart = echarts.init(document.getElementById('successRateChart'));
-    const option = {
-        title: { text: '存取款成功率趋势对比', left: 'center' },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function(params) {
-                return params[0].axisValue + '<br/>' +
-                       params[0].seriesName + ': ' + params[0].value + '%<br/>' +
-                       params[1].seriesName + ': ' + params[1].value + '%';
-            }
-        },
-        legend: { data: ['存款成功率', '取款成功率'], bottom: 10 },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
-        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
-        yAxis: { type: 'value', min: 75, max: 100, interval: 5, axisLabel: { formatter: '{value}%' } },
-        series: [
-            { name: '存款成功率', type: 'line', data: depositRates, itemStyle: { color: '#5470C6' }, smooth: true },
-            { name: '取款成功率', type: 'line', data: withdrawalRates, itemStyle: { color: '#91CC75' }, smooth: true }
-        ]
-    };
-    chart.setOption(option);
+function generateMonthOptions(dateArr) {
+    const monthSet = new Set(dateArr.map(dateStr => {
+        const d = new Date(dateStr);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }));
+    const monthFilter = document.getElementById('monthFilter');
+    monthFilter.innerHTML = '<option value="all">全部</option>';
+    monthSet.forEach(month => {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = month.replace('-', '年') + '月';
+        monthFilter.appendChild(option);
+    });
 }
 
-function renderMerchantChargeChart(dates, merchantCharges) {
-    const chart = echarts.init(document.getElementById('merchantChargeChart'));
-    const option = {
-        title: { text: '每日商户收费', left: 'center' },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function(params) {
-                return params[0].axisValue + '<br/>' +
-                       '商户收费: $' + params[0].value.toFixed(2);
-            }
-        },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
-        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
-        yAxis: { type: 'value', min: 1230, max: 1270, splitNumber: 8, axisLabel: { formatter: '${value}' } },
-        series: [
-            {
-                name: '商户收费',
-                type: 'bar',
-                data: merchantCharges,
-                itemStyle: { color: '#91CC75', borderRadius: [4, 4, 0, 0] },
-                barWidth: '60%',
-                label: { show: false }
-            }
-        ]
-    };
-    chart.setOption(option);
+function renderAllCharts(data) {
+    renderSuccessRateChart(data.dates, data.depositRates, data.withdrawalRates);
+    renderMerchantChargeChart(data.dates, data.merchantCharges);
+    renderDepositTimeChart(data.dates, data.depositTimes);
+    renderWithdrawalTimeChart(data.dates, data.withdrawalTimes);
+    renderBankAccountUsageChart(data.months, data.usageRates);
+    renderBankAccountRentalChart(data.months, data.rentalFees);
+    renderResponseSpeedChart(data.responseDates, data.responseSpeeds);
+    renderSimCardUsageChart(data.simCardDates, data.simCardUsage);
+    renderRegisterAccountChart(data.simCardDates, data.registerAccount);
 }
 
+function filterAndRenderCharts(month) {
+    if (month === 'all') {
+        renderAllCharts(allData);
+        return;
+    }
+    const filterByMonth = (datesArr, ...dataArrs) => {
+        return datesArr.reduce((acc, date, i) => {
+            const d = new Date(date);
+            const m = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (m === month) {
+                acc[0].push(date);
+                dataArrs.forEach((arr, idx) => acc[idx + 1].push(arr[i]));
+            }
+            return acc;
+        }, [[], ...dataArrs.map(() => [])]);
+    };
+
+    let [dates, depositRates, withdrawalRates] = filterByMonth(allData.dates, allData.depositRates, allData.withdrawalRates);
+    let [_, merchantCharges] = filterByMonth(allData.dates, allData.merchantCharges);
+    let [__, depositTimes] = filterByMonth(allData.dates, allData.depositTimes);
+    let [___, withdrawalTimes] = filterByMonth(allData.dates, allData.withdrawalTimes);
+    let [simCardDates, simCardUsage] = filterByMonth(allData.simCardDates, allData.simCardUsage);
+    let [registerDates, registerAccount] = filterByMonth(allData.simCardDates, allData.registerAccount);
+    let [responseDates, responseSpeeds] = filterByMonth(allData.responseDates, allData.responseSpeeds);
+
+    renderSuccessRateChart(dates, depositRates, withdrawalRates);
+    renderMerchantChargeChart(dates, merchantCharges);
+    renderDepositTimeChart(dates, depositTimes);
+    renderWithdrawalTimeChart(dates, withdrawalTimes);
+    renderBankAccountUsageChart(allData.months, allData.usageRates);
+    renderBankAccountRentalChart(allData.months, allData.rentalFees);
+    renderResponseSpeedChart(responseDates, responseSpeeds);
+    renderSimCardUsageChart(simCardDates, simCardUsage);
+    renderRegisterAccountChart(registerDates, registerAccount);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchData().catch(error => {
+        console.error('初始化失败:', error);
+    });
+
+    document.getElementById('monthFilter').addEventListener('change', function() {
+        filterAndRenderCharts(this.value);
+    });
+});
+
+// 监听窗口大小变化，调整图表大小
+window.addEventListener('resize', function() {
+    [
+        'successRateChart',
+        'merchantChargeChart',
+        'depositTimeChart',
+        'withdrawalTimeChart',
+        'bankAccountUsageChart',
+        'bankAccountRentalChart',
+        'responseSpeedChart',
+        'simCardUsageChart',
+        'registerAccountChart'
+    ].forEach(id => {
+        const chart = echarts.getInstanceByDom(document.getElementById(id));
+        if (chart) chart.resize();
+    });
+});
 function renderDepositTimeChart(dates, depositTimes) {
     const chart = echarts.init(document.getElementById('depositTimeChart'));
     const option = {
@@ -299,7 +336,6 @@ function renderBankAccountRentalChart(months, rentalFees) {
     };
     chart.setOption(option);
 }
-
 function renderResponseSpeedChart(dates, speeds) {
     const chart = echarts.init(document.getElementById('responseSpeedChart'));
     const option = {
@@ -407,28 +443,3 @@ function renderRegisterAccountChart(dates, registerAccount) {
     };
     chart.setOption(option);
 }
-
-// 页面加载完成后初始化图表
-document.addEventListener('DOMContentLoaded', function() {
-    fetchData().catch(error => {
-        console.error('初始化失败:', error);
-    });
-});
-
-// 监听窗口大小变化，调整图表大小
-window.addEventListener('resize', function() {
-    [
-        'successRateChart',
-        'merchantChargeChart',
-        'depositTimeChart',
-        'withdrawalTimeChart',
-        'bankAccountUsageChart',
-        'bankAccountRentalChart',
-        'responseSpeedChart',
-        'simCardUsageChart',
-        'registerAccountChart'
-    ].forEach(id => {
-        const chart = echarts.getInstanceByDom(document.getElementById(id));
-        if (chart) chart.resize();
-    });
-});

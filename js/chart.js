@@ -43,7 +43,7 @@ async function fetchData() {
         const rows4 = text4.split('\n').map(row => row.split(','));
         rows4.shift();
 
-        // 获取第五个 Sheet 的数据（SIM 卡使用情况）
+        // 获取第五个 Sheet 的数据（SIM 卡使用情况和注册账号）
         const response5 = await fetch(SHEET5_URL, fetchOptions);
         if (!response5.ok) throw new Error(`HTTP error! status: ${response5.status}`);
         const text5 = await response5.text();
@@ -69,9 +69,10 @@ async function fetchData() {
         const responseDates = rows4.map(row => row[0].replace(/"/g, ''));
         const responseSpeeds = rows4.map(row => parseFloat(row[1]));
 
-        // 解析第五个 Sheet 的数据（SIM 卡使用情况）
+        // 解析第五个 Sheet 的数据（SIM 卡使用情况和注册账号）
         const simCardDates = rows5.map(row => row[0].replace(/"/g, ''));
         const simCardUsage = rows5.map(row => parseFloat(row[1]));
+        const registerAccount = rows5.map(row => parseFloat(row[2]));
 
         renderSuccessRateChart(dates, depositRates, withdrawalRates);
         renderMerchantChargeChart(dates, merchantCharges);
@@ -81,6 +82,7 @@ async function fetchData() {
         renderBankAccountRentalChart(months, rentalFees);
         renderResponseSpeedChart(responseDates, responseSpeeds);
         renderSimCardUsageChart(simCardDates, simCardUsage);
+        renderRegisterAccountChart(simCardDates, registerAccount);
 
         if (loading) loading.style.display = 'none';
     } catch (error) {
@@ -106,7 +108,8 @@ window.addEventListener('resize', function() {
         'bankAccountUsageChart',
         'bankAccountRentalChart',
         'responseSpeedChart',
-        'simCardUsageChart'
+        'simCardUsageChart',
+        'registerAccountChart'
     ].forEach(id => {
         const chart = echarts.getInstanceByDom(document.getElementById(id));
         if (chart) chart.resize();
@@ -326,7 +329,7 @@ function renderResponseSpeedChart(dates, speeds) {
                        '响应速度: ' + params[0].value + ' 秒';
             }
         },
-grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
         xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
         yAxis: {
             type: 'value',
@@ -389,6 +392,43 @@ function renderSimCardUsageChart(dates, usage) {
                             type: 'average',
                             name: '平均值',
                             label: { formatter: '平均值: {c} MB', position: 'end' }
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+    chart.setOption(option);
+}
+
+function renderRegisterAccountChart(dates, registerAccount) {
+    const chart = echarts.init(document.getElementById('registerAccountChart'));
+    const option = {
+        title: { text: '每日注册账号总数', left: 'center' },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                return params[0].axisValue + '<br/>' +
+                       '注册账号数: ' + params[0].value;
+            }
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value', name: '注册账号数', minInterval: 1 },
+        series: [
+            {
+                name: '注册账号数',
+                type: 'line',
+                data: registerAccount,
+                itemStyle: { color: '#fac858' },
+                smooth: true,
+                markLine: {
+                    silent: true,
+                    data: [
+                        {
+                            type: 'average',
+                            name: '平均值',
+                            label: { formatter: '平均值: {c}', position: 'end' }
                         }
                     ]
                 }

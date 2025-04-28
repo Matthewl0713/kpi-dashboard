@@ -326,13 +326,13 @@ function renderResponseSpeedChart(dates, speeds) {
                        '响应速度: ' + params[0].value + ' 秒';
             }
         },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
         xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45 } },
         yAxis: {
             type: 'value',
-            min: 0,
-            max: 10,
-            interval: 1,
+            min: 20,
+            max: 65,
+            interval: 5,
             axisLabel: { formatter: '{value} 秒' },
             splitLine: { show: true, lineStyle: { type: 'dashed' } }
         },

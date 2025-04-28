@@ -51,6 +51,11 @@ h1 {
     justify-content: center;
 }
 
+.wide-box {
+    max-width: 100%;
+    flex-basis: 100%;
+}
+
 footer {
     text-align: center;
     margin-top: 30px;
@@ -62,7 +67,7 @@ footer {
         flex-direction: column;
         gap: 16px;
     }
-    .chart-box {
+    .chart-box, .wide-box {
         max-width: 100%;
         min-width: 0;
     }

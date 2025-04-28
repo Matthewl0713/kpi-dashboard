@@ -43,8 +43,9 @@ h1 {
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
 }
 
 .center-row {
@@ -54,6 +55,20 @@ h1 {
 .wide-box {
     max-width: 100%;
     flex-basis: 100%;
+}
+
+.chart-filter {
+    text-align: right;
+    margin-bottom: 8px;
+}
+.chart-filter label {
+    font-size: 14px;
+    color: #666;
+    margin-right: 4px;
+}
+.monthFilter {
+    padding: 3px 8px;
+    font-size: 14px;
 }
 
 footer {
